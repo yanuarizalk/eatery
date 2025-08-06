@@ -25,7 +25,7 @@ Route::prefix('auth')->group(function () {
 });
 
 // Protected routes
-Route::middleware('auth:api')->group(function () {
+Route::middleware('auth.api:api')->group(function () {
     // Auth routes
     Route::prefix('auth')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
@@ -65,4 +65,4 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/google', [ReviewController::class, 'googleReviews']);
         Route::get('/{reviewId}', [ReviewController::class, 'show']);
     });
-}); 
+});
