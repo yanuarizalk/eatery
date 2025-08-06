@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16.9
+    restart: on-failure
+    environment:
+      POSTGRES_DB: eatery
+      POSTGRES_USER: qwe
+      POSTGRES_PASSWORD: wasd1234
+    ports:
+      - "5432:5432"
+    volumes:
+      - eat:/var/lib/postgresql/data
+
+volumes:
+  eat:
