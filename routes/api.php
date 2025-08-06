@@ -31,7 +31,7 @@ Route::get('/test-auth', function () {
 
 // Protected routes
 Route::middleware('auth.api:api')->group(function () {
-    // Auth routes
+    // Auth routes (2FA management - no 2FA required for these)
     Route::prefix('auth')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::post('refresh', [AuthController::class, 'refresh']);
@@ -40,7 +40,10 @@ Route::middleware('auth.api:api')->group(function () {
         Route::post('2fa/disable', [AuthController::class, 'disable2FA']);
         Route::post('2fa/verify', [AuthController::class, 'verify2FA']);
     });
+});
 
+// Routes that require 2FA verification
+Route::middleware(['auth.api:api', 'require.2fa'])->group(function () {
     // Restaurant routes
     Route::prefix('restaurants')->group(function () {
         Route::get('/', [RestaurantController::class, 'index']);

@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'log.api' => \App\Http\Middleware\LogApiRequests::class,
             'auth.api' => \App\Http\Middleware\ApiAuthentication::class,
+            'require.2fa' => \App\Http\Middleware\RequireTwoFactor::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

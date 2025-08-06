@@ -89,7 +89,7 @@ class AuthController extends Controller
 
         $user = Auth::user();
 
-        return response()->json([
+        $response = [
             'success' => true,
             'message' => 'Login successful',
             'data' => [
@@ -99,7 +99,15 @@ class AuthController extends Controller
                 'expires_in' => auth('api')->factory()->getTTL() * 60,
                 'two_factor_enabled' => $user->two_factor_enabled
             ]
-        ]);
+        ];
+
+        // If 2FA is enabled, add a note about verification requirement
+        if ($user->two_factor_enabled) {
+            $response['data']['requires_2fa_verification'] = true;
+            $response['message'] = 'Login successful. 2FA verification required for protected resources.';
+        }
+
+        return response()->json($response);
     }
 
     /**
@@ -169,6 +177,7 @@ class AuthController extends Controller
             'message' => '2FA enabled successfully',
             'data' => [
                 'qr_code' => $result['qr_code'],
+                // 'secret_code' => $result['secret'],
                 'recovery_codes' => $result['recovery_codes']
             ]
         ]);
@@ -225,7 +234,11 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => '2FA code verified successfully'
+            'message' => '2FA code verified successfully',
+            'data' => [
+                'two_factor_verified' => true,
+                'note' => 'Include X-2FA-Verified: true header in subsequent requests to protected resources'
+            ]
         ]);
     }
 }
