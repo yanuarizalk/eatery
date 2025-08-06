@@ -12,6 +12,8 @@ class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable;
 
+    public $customClaims = [];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -65,7 +67,7 @@ class User extends Authenticatable implements JWTSubject
      */
     public function getJWTCustomClaims()
     {
-        return [];
+        return $this->customClaims;
     }
 
     /**

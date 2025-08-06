@@ -9,6 +9,7 @@ use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use OTPHP\TOTP;
 
 class TwoFactorService
 {
@@ -63,16 +64,16 @@ class TwoFactorService
             return true;
         }
 
-        // Verify TOTP code
+        // Verify TOTP code using OTPHP
         return $this->verifyTOTP($user->two_factor_secret, $code);
     }
 
     /**
-     * Generate a new secret key.
+     * Generate a new secret key (base32 for TOTP).
      */
     private function generateSecret(): string
     {
-        return Str::random(32);
+        return TOTP::generate()->getSecret();
     }
 
     /**
@@ -92,7 +93,10 @@ class TwoFactorService
      */
     private function generateQrCode(string $email, string $secret): string
     {
-        $otpauthUrl = "otpauth://totp/{$email}?secret={$secret}&issuer=EateryAPI";
+        $totp = TOTP::create($secret);
+        $totp->setLabel($email);
+        $totp->setIssuer('EateryAPI');
+        $otpauthUrl = $totp->getProvisioningUri();
 
         $renderer = new ImageRenderer(
             new RendererStyle(400),
@@ -106,36 +110,11 @@ class TwoFactorService
     }
 
     /**
-     * Verify TOTP code.
+     * Verify TOTP code using OTPHP.
      */
     private function verifyTOTP(string $secret, string $code): bool
     {
-        // Simple TOTP verification (you might want to use a proper TOTP library)
-        $timeSlice = floor(time() / 30);
-        
-        // Generate expected codes for current and adjacent time slices
-        $expectedCodes = [];
-        for ($i = -1; $i <= 1; $i++) {
-            $expectedCodes[] = $this->generateTOTP($secret, $timeSlice + $i);
-        }
-
-        return in_array($code, $expectedCodes);
+        $totp = TOTP::create($secret);
+        return $totp->verify($code);
     }
-
-    /**
-     * Generate TOTP code.
-     */
-    private function generateTOTP(string $secret, int $timeSlice): string
-    {
-        $hash = hash_hmac('sha1', pack('N*', $timeSlice), $secret, true);
-        $offset = ord($hash[19]) & 0xf;
-        $code = (
-            ((ord($hash[$offset]) & 0x7f) << 24) |
-            ((ord($hash[$offset + 1]) & 0xff) << 16) |
-            ((ord($hash[$offset + 2]) & 0xff) << 8) |
-            (ord($hash[$offset + 3]) & 0xff)
-        ) % 1000000;
-
-        return str_pad($code, 6, '0', STR_PAD_LEFT);
-    }
-} 
+}

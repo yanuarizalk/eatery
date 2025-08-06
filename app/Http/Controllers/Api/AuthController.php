@@ -55,7 +55,7 @@ class AuthController extends Controller
                 'user' => $user,
                 'token' => $token,
                 'token_type' => 'bearer',
-                'expires_in' => auth('api')->factory()->getTTL() * 60
+                'expires_in' => JWTAuth::factory()->getTTL() * 60
             ]
         ], 201);
     }
@@ -96,7 +96,7 @@ class AuthController extends Controller
                 'user' => $user,
                 'token' => $token,
                 'token_type' => 'bearer',
-                'expires_in' => auth('api')->factory()->getTTL() * 60,
+                'expires_in' => JWTAuth::factory()->getTTL() * 60,
                 'two_factor_enabled' => $user->two_factor_enabled
             ]
         ];
@@ -136,7 +136,7 @@ class AuthController extends Controller
             'data' => [
                 'token' => $token,
                 'token_type' => 'bearer',
-                'expires_in' => auth('api')->factory()->getTTL() * 60
+                'expires_in' => JWTAuth::factory()->getTTL() * 60
             ]
         ]);
     }
@@ -232,12 +232,18 @@ class AuthController extends Controller
             ], 401);
         }
 
+        // Set custom claims and generate a new token
+        $user->customClaims = ['2fa_verified' => true];
+        $token = JWTAuth::fromUser($user);
+
         return response()->json([
             'success' => true,
             'message' => '2FA code verified successfully',
             'data' => [
                 'two_factor_verified' => true,
-                'note' => 'Include X-2FA-Verified: true header in subsequent requests to protected resources'
+                'token' => $token,
+                'token_type' => 'bearer',
+                'expires_in' => JWTAuth::factory()->getTTL() * 60
             ]
         ]);
     }

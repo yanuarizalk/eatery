@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 use Symfony\Component\HttpFoundation\Response;
 
 class RequireTwoFactor
@@ -27,15 +28,26 @@ class RequireTwoFactor
 
         // If user has 2FA enabled, check if they have verified 2FA
         if ($user->two_factor_enabled) {
-            // Check if 2FA verification header is present
-            $twoFactorVerified = $request->header('X-2FA-Verified');
+            // Check if the JWT token has the '2fa_verified' claim
+            try {
+                $token = JWTAuth::getToken();
+                if (!$token) {
+                    throw new \Exception('Token not provided');
+                }
+                $payload = JWTAuth::getPayload($token);
 
-            if (!$twoFactorVerified || $twoFactorVerified !== 'true') {
+                if (!$payload->get('2fa_verified')) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Two-factor authentication required',
+                        'requires_2fa' => true
+                    ], 403);
+                }
+            } catch (\Exception $e) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Two-factor authentication required',
-                    'requires_2fa' => true
-                ], 403);
+                    'message' => 'Invalid or expired token: ' . $e->getMessage()
+                ], 401);
             }
         }
 
