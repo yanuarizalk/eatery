@@ -27,7 +27,7 @@ class RestaurantController extends Controller
     public function index(Request $request): JsonResponse
     {
         $filters = $request->only(['cuisine_type', 'min_rating', 'price_level']);
-        
+
         $restaurants = $this->restaurantRepository->getAll($filters);
 
         return response()->json([
@@ -90,10 +90,10 @@ class RestaurantController extends Controller
                 foreach ($googleResults as $googleData) {
                     // Check if restaurant already exists
                     $existingRestaurant = $this->restaurantRepository->findByGooglePlaceId($googleData['place_id']);
-                    
+
                     if (!$existingRestaurant) {
                         $restaurant = $this->restaurantRepository->createFromGoogleData($googleData);
-                        
+
                         // Get detailed information and reviews
                         $details = $this->googleMapsService->getPlaceDetails($googleData['place_id']);
                         if ($details) {
@@ -160,6 +160,7 @@ class RestaurantController extends Controller
             'success' => true,
             'message' => 'Nearby restaurants retrieved successfully',
             'data' => [
+                // 'restaurants' => $restaurants->load(['menus', 'reviews']),
                 'restaurants' => $restaurants->load(['menus', 'reviews']),
                 'count' => $restaurants->count(),
                 'location' => [

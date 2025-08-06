@@ -24,6 +24,11 @@ Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
 });
 
+// Test route
+Route::get('/test-auth', function () {
+    return response()->json(['message' => 'Authentication working']);
+})->middleware('auth.api:api');
+
 // Protected routes
 Route::middleware('auth.api:api')->group(function () {
     // Auth routes

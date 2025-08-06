@@ -53,12 +53,36 @@ class RestaurantRepository implements RestaurantRepositoryInterface
 
     public function findByLocation(float $latitude, float $longitude, float $radius = 10): Collection
     {
+        // return Restaurant::selectRaw(`
+        //     *
+        // `)
+        // return Restaurant::selectRaw(Restaurant::raw(`
+        //     select * from restaurants r
+        //     join (
+        //         select id, (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) distance
+        //         from restaurants
+        //     ) rd on r.id = rd.id
+        //     where rd.distance <= ?
+        //     order by rd.distance
+        // `, [$latitude, $longitude, $latitude, $radius]))->get();
         return Restaurant::selectRaw('*, 
-            (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance', 
-            [$latitude, $longitude, $latitude])
+            ((select 
+                (6371 * acos(cos(radians(?)) * cos(radians(r.latitude)) * cos(radians(r.longitude) - radians(?)) + sin(radians(?)) * sin(radians(r.latitude)))) AS distance
+            from restaurants r where id = r.id) distance
+            where id = restaurants.id
+            ) AS distance',
+            [$latitude, $longitude, $latitude]
+        )
             ->having('distance', '<=', $radius)
             ->orderBy('distance')
             ->get();
+        // return Restaurant::selectRaw('*, 
+        //     (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance',
+        //     [$latitude, $longitude, $latitude]
+        // )
+        //     ->having('distance', '<=', $radius)
+        //     ->orderBy('distance')
+        //     ->get();
     }
 
     public function findByCuisine(string $cuisineType): Collection
@@ -105,4 +129,4 @@ class RestaurantRepository implements RestaurantRepositoryInterface
     {
         return Restaurant::where('google_place_id', $placeId)->first();
     }
-} 
+}

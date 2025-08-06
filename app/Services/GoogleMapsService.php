@@ -108,7 +108,7 @@ class GoogleMapsService
         return $places;
     }
 
-        /**
+    /**
      * Format place details response.
      */
     private function formatPlaceDetails($response): array
