@@ -177,7 +177,7 @@ class AuthController extends Controller
             'message' => '2FA enabled successfully',
             'data' => [
                 'qr_code' => $result['qr_code'],
-                // 'secret_code' => $result['secret'],
+                'secret_code' => $result['secret'],
                 'recovery_codes' => $result['recovery_codes']
             ]
         ]);

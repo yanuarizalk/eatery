@@ -250,10 +250,12 @@ class TelegramService
             if (!empty($restaurants)) {
                 $message = "Here are the restaurants I found:\n\n";
                 foreach ($restaurants as $restaurant) {
-                    $state = $restaurant['opening_hours']['open_now'] == true ? "Open" : "Close";
+                    $state = "";
+                    if (isset($restaurant['opening_hours']) && isset($restaurant['opening_hours']['open_now']))
+                        $state = $restaurant['opening_hours']['open_now'] == true ? "Open" : "Close";
                     $message .= "*{$restaurant['name']}*\n";
                     $message .= "Rating: {$restaurant['rating']} ⭐\n";
-                    $message .= "State: {$state} \n";
+                    if (isset($state) && $state != "") $message .= "State: {$state} \n";
                     $message .= "Phone: {$restaurant['phone']} \n";
                     $message .= "Address: {$restaurant['address']} \n";
                     $message .= "[See review](https://t.me/{$botName}?start=/review {$restaurant['id']})  [View map](https://t.me/{$botName}?start=/map {$restaurant['id']})\n";
@@ -400,9 +402,13 @@ class TelegramService
 
         if ($response && $response->successful()) {
             $data = $response->json();
-            $this->sendMessage($chatId, "2FA enabled successfully. Scan this QR code with your authenticator app.");
-            $this->sendPhoto($chatId, $data['qr_code_url']);
-            $this->sendMessage($chatId, "Your recovery codes: \n" . implode("\n", $data['recovery_codes']));
+            $this->sendMessage($chatId, "2FA enabled successfully. Add this code into your authenticator app.\n");
+            $this->sendMessage($chatId, "{$data['data']['secret_code']}\n");
+
+            // $this->sendMessage($chatId, "2FA enabled successfully. Scan this QR code with your authenticator app.");
+            // $this->sendPhoto($chatId, $data['qr_code_url']);
+
+            $this->sendMessage($chatId, "Your recovery codes: \n" . implode("\n", $data['data']['recovery_codes']));
         } elseif ($response) {
             Log::error('Enable 2FA failed', ['response' => $response->body()]);
             $this->sendMessage($chatId, "Failed to enable 2FA: " . $response->json()['message']);
