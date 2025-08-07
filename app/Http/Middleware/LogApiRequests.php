@@ -2,13 +2,21 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\ApiRequest;
+use App\Repositories\Interfaces\ApiRequestRepositoryInterface;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class LogApiRequests
 {
+    protected $apiRequestRepository;
+
+    public function __construct(ApiRequestRepositoryInterface $apiRequestRepository)
+    {
+        $this->apiRequestRepository = $apiRequestRepository;
+    }
+
     /**
      * Handle an incoming request.
      *
@@ -19,7 +27,7 @@ class LogApiRequests
         $startTime = microtime(true);
 
         // Log the request
-        $apiRequest = ApiRequest::create([
+        $apiRequest = $this->apiRequestRepository->logRequest([
             'method' => $request->method(),
             'endpoint' => $request->path(),
             'client_ip' => $request->ip(),
@@ -27,7 +35,7 @@ class LogApiRequests
             'request_headers' => $request->headers->all(),
             'request_body' => $request->all(),
             'query_params' => $request->query->all(),
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
         ]);
 
         // Process the request
@@ -37,7 +45,7 @@ class LogApiRequests
         $responseTime = round((microtime(true) - $startTime) * 1000);
 
         // Update with response data
-        $apiRequest->update([
+        $this->apiRequestRepository->updateResponse($apiRequest->id, [
             'response_status' => $response->getStatusCode(),
             'response_body' => $this->getResponseBody($response),
             'response_time_ms' => $responseTime,

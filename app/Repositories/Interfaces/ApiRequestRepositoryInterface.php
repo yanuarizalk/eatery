@@ -15,4 +15,9 @@ interface ApiRequestRepositoryInterface
      * Update request with response data.
      */
     public function updateResponse(int $requestId, array $responseData): ApiRequest;
-} 
+
+    /**
+     * Get all API requests.
+     */
+    public function all(array $filters = []);
+}
