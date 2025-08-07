@@ -65,7 +65,7 @@ class RestaurantRepository implements RestaurantRepositoryInterface
                 sin(radians(?)) * sin(radians(latitude))
             )) as distance
         ", [$latitude, $longitude, $latitude])
-        ->groupBy('restaurants.id', 'restaurants.name', 'restaurants.description', 'restaurants.address', 'restaurants.latitude', 'restaurants.longitude', 'restaurants.phone', 'restaurants.website', 'restaurants.email', 'restaurants.cuisine_type', 'restaurants.rating', 'restaurants.price_level', 'restaurants.opening_hours', 'restaurants.google_place_id', 'restaurants.google_photos', 'restaurants.is_from_google')
+        ->groupBy('restaurants.id', 'restaurants.name', 'restaurants.description', 'restaurants.address', 'restaurants.latitude', 'restaurants.longitude', 'restaurants.phone', 'restaurants.website', 'restaurants.cuisine_type', 'restaurants.rating', 'restaurants.price_level', 'restaurants.opening_hours', 'restaurants.google_place_id', 'restaurants.google_photos', 'restaurants.is_from_google')
         ->havingRaw('(6371 * acos(
             cos(radians(?)) * cos(radians(latitude)) * 
             cos(radians(longitude) - radians(?)) + 

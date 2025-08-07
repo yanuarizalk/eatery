@@ -119,6 +119,9 @@ class TelegramService
         $commandName = $commandParts[0];
 
         switch ($commandName) {
+            case '/help':
+                $this->help($chatId);
+                break;
             case '/register':
                 $this->chatStates[$chatId] = ['command' => 'register', 'step' => 'name'];
                 $this->sendMessage($chatId, "Please enter your name:");
@@ -382,12 +385,12 @@ class TelegramService
         if ($response && $response->successful()) {
             $user = $response->json();
             $message = "Your details:\n";
-            $message .= "*Name:* " . $user['name'] . "\n";
-            $message .= "*Email:* " . $user['email'] . "\n";
+            $message .= "*Name:* " . $user['data']['user']['name'] . "\n";
+            $message .= "*Email:* " . $user['data']['user']['email'] . "\n";
             $this->sendMessage($chatId, $message, 'Markdown');
         } elseif ($response) {
             Log::error('Me failed', ['response' => $response->body()]);
-            $this->sendMessage($chatId, "Failed to get user details: " . $response->json()['message']);
+            $this->sendMessage($chatId, "Failed to get user details: " . $response->json());
         }
     }
 
@@ -483,6 +486,35 @@ class TelegramService
             Log::error('Get restaurants failed', ['response' => $response->body()]);
             $this->sendMessage($chatId, "Sorry, I couldn't fetch restaurants at the moment. " . $response->json()['message']);
         }
+    }
+
+    /**
+     * Send help message.
+     *
+     * @param int $chatId
+     */
+    protected function help($chatId)
+    {
+        $commands = [
+            '/help' => 'Show this help message',
+            '/register' => 'Register a new account',
+            '/login' => 'Login to your account',
+            '/logout' => 'Logout from your account',
+            '/refresh' => 'Refresh your authentication token',
+            '/me' => 'Get your user details',
+            '/enable2fa' => 'Enable Two-Factor Authentication',
+            '/disable2fa' => 'Disable Two-Factor Authentication',
+            '/verify2fa' => 'Verify Two-Factor Authentication',
+            '/index' => 'List all restaurants',
+            'Any other message' => 'Search for a restaurant by name'
+        ];
+
+        $message = "Here are the available commands:\n\n";
+        foreach ($commands as $command => $description) {
+            $message .= "*{$command}*: {$description}\n";
+        }
+
+        $this->sendMessage($chatId, $message, 'Markdown');
     }
 
     /**
