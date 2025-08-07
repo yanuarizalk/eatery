@@ -146,9 +146,9 @@ class RestaurantRepository implements RestaurantRepositoryInterface
             'cuisine_type' => $googleData['types'][0] ?? null,
             'rating' => $googleData['rating'] ?? 0,
             'price_level' => $googleData['price_level'] ?? null,
-            'opening_hours' => json_encode($googleData['opening_hours'] ?? []),
+            'opening_hours' => $googleData['opening_hours'] ?? [],
             'google_place_id' => $googleData['place_id'] ?? null,
-            'google_photos' => json_encode($googleData['photos'] ?? []),
+            'google_photos' => $googleData['photos'] ?? [],
             'is_from_google' => true,
         ]);
     }

@@ -32,7 +32,8 @@ class Restaurant extends Model
         'longitude' => 'decimal:8',
         'rating' => 'decimal:1',
         'price_level' => 'string',
-        'google_photos' => 'array',
+        'opening_hours' => 'json',
+        'google_photos' => 'json',
         'is_from_google' => 'boolean',
     ];
 

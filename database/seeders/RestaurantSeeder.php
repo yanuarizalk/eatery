@@ -36,15 +36,15 @@ class RestaurantSeeder extends Seeder
                 'cuisine_type' => 'Italian',
                 'rating' => 4.5,
                 'price_level' => 'PRICE_LEVEL_MODERATE', // Changed to string
-                'opening_hours' => json_encode([
-                    'monday' => '11:00-22:00',
-                    'tuesday' => '11:00-22:00',
-                    'wednesday' => '11:00-22:00',
-                    'thursday' => '11:00-22:00',
-                    'friday' => '11:00-23:00',
-                    'saturday' => '11:00-23:00',
-                    'sunday' => '12:00-21:00'
-                ]),
+                // 'opening_hours' => json_encode([
+                //     'monday' => '11:00-22:00',
+                //     'tuesday' => '11:00-22:00',
+                //     'wednesday' => '11:00-22:00',
+                //     'thursday' => '11:00-22:00',
+                //     'friday' => '11:00-23:00',
+                //     'saturday' => '11:00-23:00',
+                //     'sunday' => '12:00-21:00'
+                // ]),
             ],
             [
                 'name' => 'Sushi Master',
@@ -57,15 +57,15 @@ class RestaurantSeeder extends Seeder
                 'cuisine_type' => 'Japanese',
                 'rating' => 4.8,
                 'price_level' => 'PRICE_LEVEL_HIGH', // Changed to string
-                'opening_hours' => json_encode([
-                    'monday' => '11:30-22:30',
-                    'tuesday' => '11:30-22:30',
-                    'wednesday' => '11:30-22:30',
-                    'thursday' => '11:30-22:30',
-                    'friday' => '11:30-23:30',
-                    'saturday' => '11:30-23:30',
-                    'sunday' => '12:00-22:00'
-                ]),
+                // 'opening_hours' => json_encode([
+                //     'monday' => '11:30-22:30',
+                //     'tuesday' => '11:30-22:30',
+                //     'wednesday' => '11:30-22:30',
+                //     'thursday' => '11:30-22:30',
+                //     'friday' => '11:30-23:30',
+                //     'saturday' => '11:30-23:30',
+                //     'sunday' => '12:00-22:00'
+                // ]),
             ],
             [
                 'name' => 'Burger Joint',
@@ -78,15 +78,15 @@ class RestaurantSeeder extends Seeder
                 'cuisine_type' => 'American',
                 'rating' => 4.2,
                 'price_level' => 'PRICE_LEVEL_LOW', // Changed to string
-                'opening_hours' => json_encode([
-                    'monday' => '10:00-21:00',
-                    'tuesday' => '10:00-21:00',
-                    'wednesday' => '10:00-21:00',
-                    'thursday' => '10:00-21:00',
-                    'friday' => '10:00-22:00',
-                    'saturday' => '10:00-22:00',
-                    'sunday' => '11:00-20:00'
-                ]),
+                // 'opening_hours' => json_encode([
+                //     'monday' => '10:00-21:00',
+                //     'tuesday' => '10:00-21:00',
+                //     'wednesday' => '10:00-21:00',
+                //     'thursday' => '10:00-21:00',
+                //     'friday' => '10:00-22:00',
+                //     'saturday' => '10:00-22:00',
+                //     'sunday' => '11:00-20:00'
+                // ]),
             ]
         ];
 

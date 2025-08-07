@@ -58,7 +58,7 @@ return [
     | your default bot for regular use.
     |
     */
-    'default' => 'mybot',
+    'default' => env('BOT_USERNAME', 'mybot'),
 
     /*
     |--------------------------------------------------------------------------

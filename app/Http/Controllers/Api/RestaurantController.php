@@ -99,7 +99,7 @@ class RestaurantController extends Controller
                             'phone' => $details['formatted_phone_number'] ?? $restaurant->phone,
                             'website' => $details['website'] ?? $restaurant->website,
                             'email' => $details['email'] ?? $restaurant->email,
-                            'opening_hours' => json_encode($details['opening_hours'] ?? []),
+                            'opening_hours' => $details['opening_hours'] ?? [],
                         ]);
 
                         // Store reviews if available

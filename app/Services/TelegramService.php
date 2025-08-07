@@ -230,7 +230,6 @@ class TelegramService
             case 'password':
                 $this->chatStates[$chatId]['password'] = $text;
                 $this->login($chatId, $this->chatStates[$chatId]['email'], $text);
-                unset($this->chatStates[$chatId]);
                 break;
         }
     }
@@ -244,17 +243,21 @@ class TelegramService
     protected function handleConversation($chatId, $text)
     {
         $response = $this->makeApiRequest('get', '/restaurants/search', $chatId, ['q' => $text]);
+        $botName = config("telegram.default");
 
         if ($response && $response->successful()) {
             $restaurants = $response->json('data.restaurants');
             if (!empty($restaurants)) {
                 $message = "Here are the restaurants I found:\n\n";
                 foreach ($restaurants as $restaurant) {
+                    $state = $restaurant['opening_hours']['open_now'] == true ? "Open" : "Close";
                     $message .= "*{$restaurant['name']}*\n";
                     $message .= "Rating: {$restaurant['rating']} ⭐\n";
-                    // $message .= "State: {$restaurant['']} \n";
+                    $message .= "State: {$state} \n";
                     $message .= "Phone: {$restaurant['phone']} \n";
                     $message .= "Address: {$restaurant['address']} \n";
+                    $message .= "[See review](https://t.me/{$botName}?start=/review {$restaurant['id']})  [View map](https://t.me/{$botName}?start=/map {$restaurant['id']})\n";
+                    $message .= "____________________________________________________ \n";
                     // $message .= "Price: " . $restaurant['price_level'] . "\n";
                     // $message .= "Cuisine: {$restaurant['cuisine_type']}\n\n";
                 }
@@ -262,6 +265,7 @@ class TelegramService
                 $message = "I couldn't find any restaurants matching your search.";
             }
 
+            $message = (substr($message, 0, 4000));
             $this->sendMessage($chatId, $message, 'Markdown');
         } elseif ($response) {
             Log::error('Restaurant search failed', ['response' => $response->body()]);
@@ -311,17 +315,19 @@ class TelegramService
 
         if ($response && $response->successful()) {
             $data = $response->json();
-            if (isset($data['two_factor']) && $data['two_factor']) {
+            if (isset($data['data']['two_factor_enabled']) && $data['data']['two_factor_enabled']) {
                 $this->chatStates[$chatId] = ['command' => 'verify2fa', 'step' => 'code'];
                 $this->sendMessage($chatId, "Please enter your 2FA code:");
             } else {
                 $token = $data['data']['token'];
                 Cache::put("telegram_token_{$chatId}", $token, now()->addMinutes(60));
                 $this->sendMessage($chatId, "Login successful!");
+                unset($this->chatStates[$chatId]);
             }
         } elseif ($response) {
             Log::error('Login failed', ['response' => $response->body()]);
             $this->sendMessage($chatId, "Login failed: " . $response->json()['message']);
+            unset($this->chatStates[$chatId]);
         }
     }
 
@@ -433,6 +439,8 @@ class TelegramService
         $response = $this->makeApiRequest('post', '/auth/2fa/verify', $chatId, ['code' => $code]);
 
         if ($response && $response->successful()) {
+            $token = $response['data']['token'];
+            Cache::put("telegram_token_{$chatId}", $token, now()->addMinutes(60));
             $this->sendMessage($chatId, "2FA verified successfully.");
         } elseif ($response) {
             Log::error('Verify 2FA failed', ['response' => $response->body()]);
