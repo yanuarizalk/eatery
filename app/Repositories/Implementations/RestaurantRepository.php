@@ -5,6 +5,7 @@ namespace App\Repositories\Implementations;
 use App\Models\Restaurant;
 use App\Repositories\Interfaces\RestaurantRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class RestaurantRepository implements RestaurantRepositoryInterface
 {
@@ -56,6 +57,26 @@ class RestaurantRepository implements RestaurantRepositoryInterface
         // return Restaurant::selectRaw(`
         //     *
         // `)
+        return Restaurant::selectRaw("
+            *, 
+            (6371 * acos(
+                cos(radians(?)) * cos(radians(latitude)) * 
+                cos(radians(longitude) - radians(?)) + 
+                sin(radians(?)) * sin(radians(latitude))
+            )) as distance
+        ", [$latitude, $longitude, $latitude])
+        ->groupBy('restaurants.id', 'restaurants.name', 'restaurants.description', 'restaurants.address', 'restaurants.latitude', 'restaurants.longitude', 'restaurants.phone', 'restaurants.website', 'restaurants.email', 'restaurants.cuisine_type', 'restaurants.rating', 'restaurants.price_level', 'restaurants.opening_hours', 'restaurants.google_place_id', 'restaurants.google_photos', 'restaurants.is_from_google')
+        ->havingRaw('(6371 * acos(
+            cos(radians(?)) * cos(radians(latitude)) * 
+            cos(radians(longitude) - radians(?)) + 
+            sin(radians(?)) * sin(radians(latitude))
+        )) <= ?', [$latitude, $longitude, $latitude, $radius])
+        ->orderBy(DB::raw('(6371 * acos(
+            cos(radians(' . $latitude . ')) * cos(radians(latitude)) * 
+            cos(radians(longitude) - radians(' . $longitude . ')) + 
+            sin(radians(' . $latitude . ')) * sin(radians(latitude))
+        ))'))
+        ->get();
         // return Restaurant::selectRaw(Restaurant::raw(`
         //     select * from restaurants r
         //     join (
@@ -65,17 +86,24 @@ class RestaurantRepository implements RestaurantRepositoryInterface
         //     where rd.distance <= ?
         //     order by rd.distance
         // `, [$latitude, $longitude, $latitude, $radius]))->get();
-        return Restaurant::selectRaw('*, 
-            ((select 
-                (6371 * acos(cos(radians(?)) * cos(radians(r.latitude)) * cos(radians(r.longitude) - radians(?)) + sin(radians(?)) * sin(radians(r.latitude)))) AS distance
-            from restaurants r where id = r.id) distance
-            where id = restaurants.id
-            ) AS distance',
-            [$latitude, $longitude, $latitude]
-        )
-            ->having('distance', '<=', $radius)
-            ->orderBy('distance')
-            ->get();
+        // return Restaurant::selectRaw('restaurants.*, 
+        //         (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance
+        //     ', [$latitude, $longitude, $latitude])
+        //     ->join('restaurants as rd', 'restaurants.id', '=', 'rd.id')
+        //     ->having('distance', '<=', $radius)
+        //     ->orderBy('distance')
+        //     ->get();
+        // return Restaurant::selectRaw('*, 
+        //     ((select 
+        //         (6371 * acos(cos(radians(?)) * cos(radians(r.latitude)) * cos(radians(r.longitude) - radians(?)) + sin(radians(?)) * sin(radians(r.latitude)))) AS distance
+        //     from restaurants r where id = r.id) distance
+        //     where id = restaurants.id
+        //     ) AS distance',
+        //     [$latitude, $longitude, $latitude]
+        // )
+        //     ->having('distance', '<=', $radius)
+        //     ->orderBy('distance')
+        //     ->get();
         // return Restaurant::selectRaw('*, 
         //     (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance',
         //     [$latitude, $longitude, $latitude]
@@ -106,15 +134,15 @@ class RestaurantRepository implements RestaurantRepositoryInterface
             'name' => $googleData['name'] ?? '',
             'description' => $googleData['formatted_address'] ?? '',
             'address' => $googleData['formatted_address'] ?? '',
-            'city' => $googleData['address_components']['locality'] ?? '',
-            'state' => $googleData['address_components']['administrative_area_level_1'] ?? '',
-            'country' => $googleData['address_components']['country'] ?? '',
-            'postal_code' => $googleData['address_components']['postal_code'] ?? '',
+            // 'city' => $googleData['address_components']['locality'] ?? '',
+            // 'state' => $googleData['address_components']['administrative_area_level_1'] ?? '',
+            // 'country' => $googleData['address_components']['country'] ?? '',
+            // 'postal_code' => $googleData['address_components']['postal_code'] ?? '',
             'latitude' => $googleData['geometry']['location']['lat'] ?? null,
             'longitude' => $googleData['geometry']['location']['lng'] ?? null,
             'phone' => $googleData['formatted_phone_number'] ?? null,
             'website' => $googleData['website'] ?? null,
-            'email' => $googleData['email'] ?? null,
+            // 'email' => $googleData['email'] ?? null,
             'cuisine_type' => $googleData['types'][0] ?? null,
             'rating' => $googleData['rating'] ?? 0,
             'price_level' => $googleData['price_level'] ?? null,

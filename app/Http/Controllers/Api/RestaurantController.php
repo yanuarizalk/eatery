@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Repositories\Interfaces\RestaurantRepositoryInterface;
 use App\Services\GoogleMapsService;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 
 class RestaurantController extends Controller
@@ -78,54 +79,53 @@ class RestaurantController extends Controller
         $query = $request->input('q');
         $filters = $request->only(['cuisine_type', 'min_rating', 'price_level']);
 
-        // First, try to find in database
-        $restaurants = $this->restaurantRepository->search($query, $filters);
+        $googleResults = $this->googleMapsService->searchRestaurants($query);
+        $restaurants = new Collection();
 
-        // If no results found, search Google Maps API
-        if ($restaurants->isEmpty()) {
-            $googleResults = $this->googleMapsService->searchRestaurants($query);
+        if (!empty($googleResults)) {
+            // Store Google results in database
+            foreach ($googleResults as $googleData) {
+                // Check if restaurant already exists
+                $existingRestaurant = $this->restaurantRepository->findByGooglePlaceId($googleData['place_id']);
 
-            if (!empty($googleResults)) {
-                // Store Google results in database
-                foreach ($googleResults as $googleData) {
-                    // Check if restaurant already exists
-                    $existingRestaurant = $this->restaurantRepository->findByGooglePlaceId($googleData['place_id']);
+                if (!$existingRestaurant) {
+                    $restaurant = $this->restaurantRepository->createFromGoogleData($googleData);
 
-                    if (!$existingRestaurant) {
-                        $restaurant = $this->restaurantRepository->createFromGoogleData($googleData);
+                    // Get detailed information and reviews
+                    $details = $this->googleMapsService->getPlaceDetails($googleData['place_id']);
+                    if ($details) {
+                        $restaurant->update([
+                            'description' => $details['formatted_address'] ?? $restaurant->description,
+                            'phone' => $details['formatted_phone_number'] ?? $restaurant->phone,
+                            'website' => $details['website'] ?? $restaurant->website,
+                            'email' => $details['email'] ?? $restaurant->email,
+                            'opening_hours' => json_encode($details['opening_hours'] ?? []),
+                        ]);
 
-                        // Get detailed information and reviews
-                        $details = $this->googleMapsService->getPlaceDetails($googleData['place_id']);
-                        if ($details) {
-                            $restaurant->update([
-                                'description' => $details['formatted_address'] ?? $restaurant->description,
-                                'phone' => $details['formatted_phone_number'] ?? $restaurant->phone,
-                                'website' => $details['website'] ?? $restaurant->website,
-                                'email' => $details['email'] ?? $restaurant->email,
-                                'opening_hours' => json_encode($details['opening_hours'] ?? []),
-                            ]);
-
-                            // Store reviews if available
-                            if (isset($details['reviews'])) {
-                                foreach ($details['reviews'] as $reviewData) {
-                                    $restaurant->reviews()->create([
-                                        'user_id' => 1, // Default user for Google reviews
-                                        'rating' => $reviewData['rating'],
-                                        'comment' => $reviewData['text'],
-                                        'reviewer_name' => $reviewData['author_name'],
-                                        'google_review_id' => $reviewData['review_id'],
-                                        'is_from_google' => true,
-                                        'reviewed_at' => now(),
-                                    ]);
-                                }
+                        // Store reviews if available
+                        if (isset($details['reviews'])) {
+                            foreach ($details['reviews'] as $reviewData) {
+                                $restaurant->reviews()->create([
+                                    'user_id' => 1, // Default user for Google reviews
+                                    'rating' => $reviewData['rating'],
+                                    'comment' => isset($reviewData['originalText']) ? $reviewData['originalText']['text'] : "",
+                                    'reviewer_name' => $reviewData['authorAttribution']['displayName'],
+                                    'google_review_id' => substr($reviewData['name'], strpos($reviewData['name'], 'reviews/') + strlen('reviews/')),
+                                    'is_from_google' => true,
+                                    'reviewed_at' => $reviewData['publishTime'] ?? now(),
+                                ]);
                             }
                         }
                     }
+                
+                    $restaurants[] = $restaurant;
+                } else {
+                    $restaurants[] = $existingRestaurant;
                 }
-
-                // Get updated results from database
-                $restaurants = $this->restaurantRepository->search($query, $filters);
             }
+
+            // Get updated results from database
+            // $restaurants = $this->restaurantRepository->search($query, $filters); 
         }
 
         return response()->json([
