@@ -485,7 +485,7 @@ class TelegramService
                 foreach ($restaurants as $restaurant) {
                     $message .= "*{$restaurant['name']}*\n";
                     $message .= "Rating: {$restaurant['rating']} ⭐\n";
-                    $message .= "Price: " . str_repeat('$', $restaurant['price_level']) . "\n";
+                    $message .= "Price: " . $restaurant['price_level'] . "\n";
                     $message .= "Cuisine: {$restaurant['cuisine_type']}\n\n";
                 }
             } else {

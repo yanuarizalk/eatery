@@ -53,7 +53,7 @@ You can interact with the Eatery API through the Telegram bot.
 *   **Bot Link:** [t.me/PopinaMaBot](https://t.me/PopinaMaBot)
 *   **Available Commands:**
     *   `/help` - List all command.
-    *   `<restaurant name>` - Search for a restaurant.
+    *   `<query>` - Search for a restaurant name, can be cuisine, rating, place, anything.
 
 ## Running Tests
 
