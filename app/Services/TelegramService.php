@@ -92,7 +92,9 @@ class TelegramService
             $output->writeln("chatId: {$chatId} Message ID: {$message->getMessageId()} message: {$message->getText()}");
             $text = $message->getText();
 
-            if ($text) {
+            if ($message->has('location')) {
+                $this->handleLocation($chatId, $message->getLocation(), $message->getText());
+            } elseif ($text) {
                 if ($this->isCommand($text)) {
                     $this->handleCommand($chatId, $text);
                 } else {
@@ -285,6 +287,56 @@ class TelegramService
             $this->sendMessage($chatId, $message, 'Markdown');
         } elseif ($response) {
             Log::error('Restaurant search failed', ['response' => $response->body()]);
+            $this->sendMessage($chatId, "Sorry, I couldn't search for restaurants at the moment. " . $this->getErrorMessageFromResponse($response));
+        }
+    }
+
+    /**
+     * Handle the location.
+     *
+     * @param int $chatId
+     * @param \Telegram\Bot\Objects\Location $location
+     * @param string|null $text
+     */
+    protected function handleLocation($chatId, $location, $text = null)
+    {
+        $latitude = $location->getLatitude();
+        $longitude = $location->getLongitude();
+
+        $queryParams = [
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'q' => $text ?? 'restaurant'
+        ];
+
+        $response = $this->makeApiRequest('get', '/restaurants/search', $chatId, $queryParams);
+        $botName = config("telegram.default");
+
+        if ($response && $response->successful()) {
+            $restaurants = $response->json('data.restaurants');
+            if (!empty($restaurants)) {
+                $message = "Here are the restaurants I found near you:\n\n";
+                foreach ($restaurants as $restaurant) {
+                    $state = "";
+                    if (isset($restaurant['opening_hours']) && isset($restaurant['opening_hours']['open_now']))
+                        $state = $restaurant['opening_hours']['open_now'] == true ? "Open" : "Close";
+                    $message .= "*{$restaurant['name']}*\n";
+                    $message .= "Rating: {$restaurant['rating']} ⭐\n";
+                    if (isset($state) && $state != "")
+                        $message .= "State: {$state} \n";
+                    $message .= "Phone: {$restaurant['phone']} \n";
+                    $message .= "Address: {$restaurant['address']} \n";
+                    $message .= "[See review](https://t.me/{$botName}?start=/review {$restaurant['id']})  [View map](https://t.me/{$botName}?start=/map {$restaurant['id']})\n";
+                    $message .= "____________________________________________________ \n";
+                }
+            } else {
+                $message = "I couldn't find any restaurants near you.";
+            }
+
+            $message = (substr($message, 0, 4000));
+            $this->sendMessage($chatId, $message, 'Markdown');
+        } elseif ($response) {
+            Log::error('Restaurant search by location failed', ['response' => $response->body()]);
             $this->sendMessage($chatId, "Sorry, I couldn't search for restaurants at the moment. " . $this->getErrorMessageFromResponse($response));
         }
     }
@@ -528,7 +580,8 @@ class TelegramService
             '/disable2fa' => 'Disable Two-Factor Authentication',
             '/verify2fa' => 'Verify Two-Factor Authentication',
             '/index' => 'List all restaurants',
-            'Any other message' => 'Search for a restaurant by name'
+            'Any other message' => 'Search for a restaurant with any criteria',
+            'Share location' => 'Find restaurants near you with any criteria'
         ];
 
         $message = "Here are the available commands:\n\n";
