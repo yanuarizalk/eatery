@@ -477,21 +477,32 @@ class TelegramService
     protected function getRestaurants($chatId)
     {
         $response = $this->makeApiRequest('get', '/restaurants', $chatId);
+        $botName = config("telegram.default");
 
         if ($response && $response->successful()) {
             $restaurants = $response->json('data.restaurants');
             if (!empty($restaurants)) {
                 $message = "Here are the available restaurants:\n\n";
                 foreach ($restaurants as $restaurant) {
+                    $state = "";
+                    if (isset($restaurant['opening_hours']) && isset($restaurant['opening_hours']['open_now']))
+                        $state = $restaurant['opening_hours']['open_now'] == true ? "Open" : "Close";
                     $message .= "*{$restaurant['name']}*\n";
                     $message .= "Rating: {$restaurant['rating']} ⭐\n";
-                    $message .= "Price: " . $restaurant['price_level'] . "\n";
-                    $message .= "Cuisine: {$restaurant['cuisine_type']}\n\n";
+                    if (isset($state) && $state != "")
+                        $message .= "State: {$state} \n";
+                    $message .= "Phone: {$restaurant['phone']} \n";
+                    $message .= "Address: {$restaurant['address']} \n";
+                    $message .= "[See review](https://t.me/{$botName}?start=/review {$restaurant['id']})  [View map](https://t.me/{$botName}?start=/map {$restaurant['id']})\n";
+                    $message .= "____________________________________________________ \n";
+                    // $message .= "Price: " . $restaurant['price_level'] . "\n";
+                    // $message .= "Cuisine: {$restaurant['cuisine_type']}\n\n";
                 }
             } else {
                 $message = "No restaurants found.";
             }
 
+            $message = (substr($message, 0, 4000));
             $this->sendMessage($chatId, $message, 'Markdown');
         } elseif ($response) {
             Log::error('Get restaurants failed', ['response' => $response->body()]);

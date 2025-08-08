@@ -58,4 +58,24 @@ class RestaurantApiTest extends TestCase
                 ]
             ]);
     }
+    public function test_can_search_restaurants_with_location()
+    {
+        $user = User::factory()->create();
+        $token = JWTAuth::fromUser($user);
+        
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+        ])->getJson('/api/restaurants/search?q=pizza&latitude=40.7128&longitude=-74.0060');
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'success',
+                'message',
+                'data' => [
+                    'restaurants',
+                    'count',
+                    'query'
+                ]
+            ]);
+    }
 }

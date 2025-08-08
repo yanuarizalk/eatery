@@ -71,15 +71,17 @@ class RestaurantController extends Controller
     {
         $request->validate([
             'q' => 'required|string|min:2',
-            'cuisine_type' => 'nullable|string',
-            'min_rating' => 'nullable|numeric|min:0|max:5',
-            'price_level' => 'nullable|integer|min:1|max:4',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
+            'radius' => 'nullable|numeric|between:100,5000',
         ]);
 
         $query = $request->input('q');
-        $filters = $request->only(['cuisine_type', 'min_rating', 'price_level']);
+        $latitude = $request->input('latitude');
+        $longitude = $request->input('longitude');
+        $radius = $request->input('radius') ?? 3000;
 
-        $googleResults = $this->googleMapsService->searchRestaurants($query);
+        $googleResults = $this->googleMapsService->searchRestaurants($query, $latitude, $longitude, $radius);
         $restaurants = new Collection();
 
         if (!empty($googleResults)) {

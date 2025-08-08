@@ -46,7 +46,6 @@ class TelegramBot extends Command
     public function handle()
     {
         $this->info('Bot started...');
-
         while (true) {
             try {
                 $updates = $this->telegramService->getUpdates();
