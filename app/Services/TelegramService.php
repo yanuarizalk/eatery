@@ -375,7 +375,7 @@ class TelegramService
         $response = $this->makeApiRequest('post', '/auth/refresh', $chatId);
 
         if ($response && $response->successful()) {
-            $token = $response->json('data.access_token');
+            $token = $response->json('data.token');
             Cache::put("telegram_token_{$chatId}", $token, now()->addMinutes(60));
             $this->sendMessage($chatId, "Token refreshed successfully!");
         } elseif ($response) {
