@@ -69,6 +69,16 @@ class TelegramService
     }
 
     /**
+     * @param \Illuminate\Http\Client\Response $response
+     * @return string
+     */
+    private function getErrorMessageFromResponse(\Illuminate\Http\Client\Response $response): string
+    {
+        $errorData = $response->json();
+        return $errorData['message'] ?? 'An unknown error occurred.';
+    }
+
+    /**
      * Process the update.
      *
      * @param \Telegram\Bot\Objects\Update $update
@@ -275,7 +285,7 @@ class TelegramService
             $this->sendMessage($chatId, $message, 'Markdown');
         } elseif ($response) {
             Log::error('Restaurant search failed', ['response' => $response->body()]);
-            $this->sendMessage($chatId, "Sorry, I couldn't search for restaurants at the moment. " . $response->json());
+            $this->sendMessage($chatId, "Sorry, I couldn't search for restaurants at the moment. " . $this->getErrorMessageFromResponse($response));
         }
     }
 
@@ -301,7 +311,7 @@ class TelegramService
             $this->sendMessage($chatId, "Registration successful!");
         } elseif ($response) {
             Log::error('Registration failed', ['response' => $response->body()]);
-            $this->sendMessage($chatId, "Registration failed: " . $response->json());
+            $this->sendMessage($chatId, "Registration failed: " . $this->getErrorMessageFromResponse($response));
         }
     }
 
@@ -332,7 +342,7 @@ class TelegramService
             }
         } elseif ($response) {
             Log::error('Login failed', ['response' => $response->body()]);
-            $this->sendMessage($chatId, "Login failed: " . $response->json());
+            $this->sendMessage($chatId, "Login failed: " . $this->getErrorMessageFromResponse($response));
             unset($this->chatStates[$chatId]);
         }
     }
@@ -351,7 +361,7 @@ class TelegramService
             $this->sendMessage($chatId, "Logout successful!");
         } elseif ($response) {
             Log::error('Logout failed', ['response' => $response->body()]);
-            $this->sendMessage($chatId, "Logout failed: " . $response->json());
+            $this->sendMessage($chatId, "Logout failed: " . $this->getErrorMessageFromResponse($response));
         }
     }
 
@@ -370,7 +380,7 @@ class TelegramService
             $this->sendMessage($chatId, "Token refreshed successfully!");
         } elseif ($response) {
             Log::error('Refresh failed', ['response' => $response->body()]);
-            $this->sendMessage($chatId, "Refresh failed: " . $response->json());
+            $this->sendMessage($chatId, "Refresh failed: " . $this->getErrorMessageFromResponse($response));
         }
     }
 
@@ -391,7 +401,7 @@ class TelegramService
             $this->sendMessage($chatId, $message, 'Markdown');
         } elseif ($response) {
             Log::error('Me failed', ['response' => $response->body()]);
-            $this->sendMessage($chatId, "Failed to get user details: " . $response->json());
+            $this->sendMessage($chatId, "Failed to get user details: " . $this->getErrorMessageFromResponse($response));
         }
     }
 
@@ -415,7 +425,7 @@ class TelegramService
             $this->sendMessage($chatId, "Your recovery codes: \n" . implode("\n", $data['data']['recovery_codes']));
         } elseif ($response) {
             Log::error('Enable 2FA failed', ['response' => $response->body()]);
-            $this->sendMessage($chatId, "Failed to enable 2FA: " . $response->json());
+            $this->sendMessage($chatId, "Failed to enable 2FA: " . $this->getErrorMessageFromResponse($response));
         }
     }
 
@@ -433,7 +443,7 @@ class TelegramService
             $this->sendMessage($chatId, "2FA disabled successfully.");
         } elseif ($response) {
             Log::error('Disable 2FA failed', ['response' => $response->body()]);
-            $this->sendMessage($chatId, "Failed to disable 2FA: " . $response->json());
+            $this->sendMessage($chatId, "Failed to disable 2FA: " . $this->getErrorMessageFromResponse($response));
         }
         unset($this->chatStates[$chatId]);
     }
@@ -454,7 +464,7 @@ class TelegramService
             $this->sendMessage($chatId, "2FA verified successfully.");
         } elseif ($response) {
             Log::error('Verify 2FA failed', ['response' => $response->body()]);
-            $this->sendMessage($chatId, "Failed to verify 2FA: " . $response->json());
+            $this->sendMessage($chatId, "Failed to verify 2FA: " . $this->getErrorMessageFromResponse($response));
         }
         unset($this->chatStates[$chatId]);
     }
@@ -485,7 +495,7 @@ class TelegramService
             $this->sendMessage($chatId, $message, 'Markdown');
         } elseif ($response) {
             Log::error('Get restaurants failed', ['response' => $response->body()]);
-            $this->sendMessage($chatId, "Sorry, I couldn't fetch restaurants at the moment. " . $response->json());
+            $this->sendMessage($chatId, "Sorry, I couldn't fetch restaurants at the moment. " . $this->getErrorMessageFromResponse($response));
         }
     }
 

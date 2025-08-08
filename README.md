@@ -6,6 +6,7 @@ This is the backend API for the Eatery application, a platform for discovering r
 
 *   **Backend:** Laravel (PHP)
 *   **Database:** Postgre
+*   **Caching:** Redis
 *   **Web Server:** Nginx
 *   **Containerization:** Docker
 
@@ -47,11 +48,10 @@ A complete collection of API endpoints is available on Postman. You can access i
 
 ## Telegram Bot
 
-You can interact with the Eatery API through our Telegram bot.
+You can interact with the Eatery API through the Telegram bot.
 
 *   **Bot Link:** [t.me/PopinaMaBot](https://t.me/PopinaMaBot)
 *   **Available Commands:**
-    *   `/start` - Initialize the bot.
     *   `/help` - List all command.
     *   `<restaurant name>` - Search for a restaurant.
 
@@ -60,4 +60,4 @@ You can interact with the Eatery API through our Telegram bot.
 To run the full suite of tests for the application, use the following command:
 
 ```bash
-docker-compose exec app php artisan test
+php artisan test
